@@ -2,11 +2,12 @@ package com.example;
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+// CHANGE THESE TO JAKARTA
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @WebServlet("/submit-vote")
 public class PollServlet extends HttpServlet {
@@ -17,21 +18,20 @@ public class PollServlet extends HttpServlet {
         
         String option = request.getParameter("option");
         
+        // Get the global vote map from Application Scope
+        // Note: 'getServletContext()' is now 'jakarta.servlet.ServletContext'
+        ConcurrentHashMap<String, Integer> votes = (ConcurrentHashMap<String, Integer>) 
+            getServletContext().getAttribute("votes");
+        
+        if (votes == null) {
+            votes = new ConcurrentHashMap<>();
+            getServletContext().setAttribute("votes", votes);
+        }
+        
         if (option != null) {
-            // Get the global vote map from Application Scope
-            ConcurrentHashMap<String, Integer> votes = (ConcurrentHashMap<String, Integer>) 
-                getServletContext().getAttribute("votes");
-            
-            if (votes == null) {
-                votes = new ConcurrentHashMap<>();
-                getServletContext().setAttribute("votes", votes);
-            }
-            
-            // Increment the vote count
             votes.merge(option, 1, Integer::sum);
         }
         
-        // Redirect back to the main page to see results
         response.sendRedirect("index.jsp");
     }
 }
