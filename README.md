@@ -1,6 +1,3 @@
-🚀 PollApp: Real-Time DevOps Voting Application
-PollApp is a Java-based web application designed to demonstrate a complete DevOps lifecycle. It features real-time poll updates using AJAX and is integrated with SonarQube for code quality and Nexus for artifact management.
-
 🛠 Project Stack
 Java 17 (Amazon Corretto)
 
