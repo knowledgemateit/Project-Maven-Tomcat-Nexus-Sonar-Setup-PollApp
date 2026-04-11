@@ -10,26 +10,17 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @WebServlet("/get-results")
 public class ResultsServlet extends HttpServlet {
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
-            throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        ConcurrentHashMap<String, Integer> votes = (ConcurrentHashMap<String, Integer>) getServletContext().getAttribute("votes");
+        StringBuilder sb = new StringBuilder();
         
-        // Get the global vote map
-        ConcurrentHashMap<String, Integer> votes = (ConcurrentHashMap<String, Integer>) 
-            getServletContext().getAttribute("votes");
-
-        StringBuilder html = new StringBuilder();
-        if (votes != null && !votes.isEmpty()) {
-            for (String key : votes.keySet()) {
-                html.append("<div class='result-bar'>")
-                    .append(key).append(": ").append(votes.get(key))
-                    .append(" votes</div>");
-            }
+        if (votes == null || votes.isEmpty()) {
+            sb.append("<p>No votes yet!</p>");
         } else {
-            html.append("<p>No votes yet. Be the first!</p>");
+            votes.forEach((k, v) -> sb.append("<div class='result-bar'>").append(k).append(": ").append(v).append("</div>"));
         }
-
-        response.setContentType("text/html");
-        response.getWriter().write(html.toString());
+        
+        resp.setContentType("text/html");
+        resp.getWriter().write(sb.toString());
     }
 }
