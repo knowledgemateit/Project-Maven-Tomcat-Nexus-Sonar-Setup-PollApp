@@ -71,4 +71,61 @@ sudo vi /opt/tomcat/webapps/host-manager/META-INF/context.xml
 
 sudo systemctl restart tomcat
 
-cp /opt/Maven-Tomcat-Nexus-Sonar-Setup/target/java-tomcat-maven-example.war /opt/tomcat/webapps/
+
+
+--------------------------------
+SonarQube: 
+
+sudo dnf install docker -y
+sudo systemctl start docker
+sudo systemctl enable docker
+
+sudo docker run -d --name sonarqube -p 9000:9000 sonarqube:lts-community
+
+Default: admin/admin
+
+
+sudo dd if=/dev/zero of=/swapfile bs=128M count=16
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+echo '/swapfile swap swap defaults 0 0' | sudo tee -a /etc/fstab
+free -h
+sudo sysctl -w vm.max_map_count=262144
+echo "vm.max_map_count=262144" | sudo tee -a /etc/sysctl.conf
+
+sudo docker restart sonarqube
+
+
+squ_742806cb62c2f2aca0cc21cf5f3d91ef5dfe088e
+
+rm -f /opt/PollApp/src/main/java/com/example/PollTest.java
+
+# Create the test directory if it was deleted
+mkdir -p /opt/PollApp/src/test/java/com/example/
+
+# Create the test file in the CORRECT spot
+cat <<EOF > /opt/PollApp/src/test/java/com/example/PollTest.java
+package com.example;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.util.concurrent.ConcurrentHashMap;
+
+public class PollTest {
+    @Test
+    void testVoteCounting() {
+        ConcurrentHashMap<String, Integer> map = new ConcurrentHashMap<>();
+        map.merge("Docker", 1, Integer::sum);
+        assertEquals(1, map.get("Docker"));
+    }
+}
+EOF
+
+export MAVEN_OPTS="-Xmx256m"
+  
+  mvn sonar:sonar \
+  -Dsonar.projectKey=PollApp \
+  -Dsonar.host.url=http://localhost:9000 \
+  -Dsonar.login=squ_da7bb4dc6f06881f9e6ebd8055541f3f3492ec2a
+  
