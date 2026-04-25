@@ -13,7 +13,15 @@ pipeline {
         NEXUS_URL = "localhost:8081"
     }
 
+    
     stages {
+        stage('Checkout Code') {
+            steps {
+                echo 'Cloning PollApp Repository...'
+                git branch: 'main', url: 'https://github.com/knowledgemateit/Project-Maven-Tomcat-Nexus-Sonar-Setup-PollApp.git'
+            }
+        }
+        
         stage('Build & Test') {
             steps {
                 echo 'Building PollApp and running JUnit tests...'
