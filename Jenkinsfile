@@ -3,7 +3,6 @@ pipeline {
 
     tools {
         maven 'Maven_Latest' // Ensure this matches your Global Tool Configuration
-        jdk 'Java_17'
     }
 
     environment {
