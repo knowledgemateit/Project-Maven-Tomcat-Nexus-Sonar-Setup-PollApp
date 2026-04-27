@@ -26,6 +26,7 @@ pipeline {
                 echo 'Analyzing Code Quality...'
                 // This wrapper injects the URL and Token automatically
                 withSonarQubeEnv('SonarQube-Server') {
+                    sh "sudo rm -rf /var/lib/jenkins/.sonar/cache"
                     sh "mvn sonar:sonar -Dsonar.projectKey=PollApp"
                 }
             }
