@@ -40,18 +40,21 @@ pipeline {
             }
         }
 
-        stage('Deploy to Tomcat') {
+       stage('Deploy to Tomcat') {
             steps {
                 echo 'Deploying to Tomcat 10 Container...'
-                deploy deployments: [[
-                    contextPath: '/PollApp', 
+                deployAdapter(
+                    adapters: [
+                        tomcat9( // Use tomcat9 adapter for Tomcat 10+
+                            credentialsId: 'tomcat-admin-creds',
+                            url: 'http://localhost:8080'
+                        )
+                    ],
+                    contextPath: '/PollApp',
                     war: 'target/*.war'
-                ]], 
-                credentialsId: 'tomcat-admin-creds', 
-                targetAddress: 'http://localhost:8080'
+                )
             }
         }
-    }
     
     post {
         always {
