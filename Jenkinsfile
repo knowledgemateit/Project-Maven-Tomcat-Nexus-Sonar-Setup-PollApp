@@ -1,18 +1,11 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'Maven_Latest' // Ensure this matches your Global Tool Configuration
-    }
-
     environment {
-        // Resource optimization for your t2.micro
-        MAVEN_OPTS = "-Xmx256m" 
-        SONAR_URL = "http://localhost:9000"
-        NEXUS_URL = "localhost:8081"
+        // Critical for your 4GB server to prevent OOM crashes
+        MAVEN_OPTS = "-Xmx256m -XX:MaxMetaspaceSize=128m" 
     }
 
-    
     stages {
         stage('Checkout Code') {
             steps {
@@ -23,7 +16,7 @@ pipeline {
         
         stage('Build & Test') {
             steps {
-                echo 'Building PollApp and running JUnit tests...'
+                echo 'Building PollApp...'
                 sh 'mvn clean verify'
             }
         }
@@ -31,35 +24,38 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 echo 'Analyzing Code Quality...'
-                // Use the token you generated in SonarQube
+                // This wrapper injects the URL and Token automatically
                 withSonarQubeEnv('SonarQube-Server') {
-                    sh "mvn sonar:sonar -Dsonar.projectKey=PollApp -Dsonar.host.url=${SONAR_URL}"
+                    sh "mvn sonar:sonar -Dsonar.projectKey=PollApp"
                 }
             }
         }
 
-
         stage('Nexus Artifact Upload') {
             steps {
-                echo 'Uploading versioned WAR to Nexus...'
-                // This utilizes your settings.xml configuration
+                echo 'Uploading WAR to Nexus...'
+                // Ensure /etc/maven/settings.xml has your admin123 credentials
                 sh 'mvn deploy -DskipTests'
             }
         }
 
         stage('Deploy to Tomcat') {
             steps {
-                echo 'Deploying to Tomcat 10...'
-                // Using the 'Deploy to Container' plugin
+                echo 'Deploying to Tomcat 10 Container...'
                 deploy deployments: [[
                     contextPath: '/PollApp', 
                     war: 'target/*.war'
                 ]], 
-                contextPath: null, 
-                onFailure: false, 
                 credentialsId: 'tomcat-admin-creds', 
                 targetAddress: 'http://localhost:8080'
             }
+        }
+    }
+    
+    post {
+        always {
+            echo 'Cleaning up workspace to save disk space...'
+            cleanWs()
         }
     }
 }
