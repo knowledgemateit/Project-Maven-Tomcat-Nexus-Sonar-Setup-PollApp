@@ -1,6 +1,9 @@
 tomcat : Servlet container used for java web application
 
-sudo docker run -d -p 8080:8080 --name tomcat-prod tomcat:10.1-jdk17-corretto
+sudo docker run -d -p 8080:8080 --name tomcat-prod \
+  --memory="512m" \
+  -e JAVA_OPTS="-Xms256m -Xmx256m" \
+  tomcat:10.1-jdk17-corretto
 
 cat <<EOF > tomcat-users.xml
 <tomcat-users>
@@ -36,7 +39,12 @@ sudo docker restart tomcat-prod
 ---------------------------------------------------
 SonarQube: 
 
-sudo docker run -d --name sonarqube -p 9000:9000 sonarqube:lts-community
+sudo docker run -d -p 9000:9000 --name sonarqube \
+  --memory="1.5g" \
+  -e SONAR_WEB_JAVAOPTS="-Xms512m -Xmx512m" \
+  -e SONAR_CE_JAVAOPTS="-Xms512m -Xmx512m" \
+  -e SONAR_SEARCH_JAVAOPTS="-Xms512m -Xmx512m" \
+  sonarqube:lts-community
 
 Default: admin/admin
 
@@ -51,9 +59,6 @@ sudo sysctl -w vm.max_map_count=262144
 echo "vm.max_map_count=262144" | sudo tee -a /etc/sysctl.conf
 
 sudo docker restart sonarqube
-
-
-squ_742806cb62c2f2aca0cc21cf5f3d91ef5dfe088e
 
 rm -f /opt/PollApp/src/main/java/com/example/PollTest.java
 
@@ -91,7 +96,10 @@ Nexus: Artifactory  8081
 
 
 # Run Nexus Container
-sudo docker run -d -p 8081:8081 --name nexus sonatype/nexus3
+sudo docker run -d -p 8081:8081 --name nexus \
+  --memory="1g" \
+  -e INSTALL4J_ADD_VM_PARAMS="-Xms512m -Xmx512m -XX:MaxDirectMemorySize=512m" \
+  sonatype/nexus3
 
 sudo docker exec -it nexus cat /nexus-data/admin.password
 
