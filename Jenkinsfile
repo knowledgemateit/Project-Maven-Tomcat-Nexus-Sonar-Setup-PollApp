@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        // Critical for your 4GB server to prevent OOM crashes
         MAVEN_OPTS = "-Xmx256m -XX:MaxMetaspaceSize=128m" 
     }
 
@@ -24,9 +23,8 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 echo 'Analyzing Code Quality...'
-                // This wrapper injects the URL and Token automatically
                 withSonarQubeEnv('SonarQube-Server') {
-                    sh "sudo rm -rf /var/lib/jenkins/.sonar/cache"
+                    // Ensure jenkins user has sudo rights or skip sudo if permissions are set
                     sh "mvn sonar:sonar -Dsonar.projectKey=PollApp"
                 }
             }
@@ -35,17 +33,17 @@ pipeline {
         stage('Nexus Artifact Upload') {
             steps {
                 echo 'Uploading WAR to Nexus...'
-                // Ensure /etc/maven/settings.xml has your admin123 credentials
                 sh 'mvn deploy -DskipTests'
             }
         }
 
-       stage('Deploy to Tomcat') {
+        stage('Deploy to Tomcat') {
             steps {
                 echo 'Deploying to Tomcat 10 Container...'
-                deployAdapter(
+                // Correct Declarative Syntax for Deploy to Container Plugin
+                deploy(
                     adapters: [
-                        tomcat9( // Use tomcat9 adapter for Tomcat 10+
+                        tomcat9(
                             credentialsId: 'tomcat-admin-creds',
                             url: 'http://localhost:8080'
                         )
@@ -55,6 +53,7 @@ pipeline {
                 )
             }
         }
+    }
     
     post {
         always {
